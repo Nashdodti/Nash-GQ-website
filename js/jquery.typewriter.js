@@ -1,1 +1,112 @@
-!function(e){e.fn.typewriter=function(t){var n=e.extend({prefix:"Prefix",text:["Hey","This is cool, isn't it?"],typeDelay:200,waitingTime:1e3,callback:null,blinkSpeed:1e3},t);return this.each((function(){for(var t=0;t<n.text.length;t++)n.text[t].length;e(this).append('<span id="typewriter-prefix"></span>'),e(this).append('<span id="typewriter-text"></span>'),e(this).append('<span id="typewriter-suffix">&#9608;</span>'),e("#typewriter-prefix").html(n.prefix),setInterval((function(){e("#typewriter-suffix").animate({opacity:0}).animate({opacity:1})}),n.blinkSpeed);var r=URL.createObjectURL(new Blob(["(",function(){function e(){if(null!==self.sInt){if(clearInterval(sInt),!1===once)return setTimeout(e,n.waitingTime),void(once=!0);once=!1,sInt=null,eInt=setInterval((function(){var e=[];e[0]=1,postMessage(e)}),n.typeDelay)}else{clearInterval(eInt),eInt=null;var t=n.text[Math.floor(currentStringIndex/2)];sInt=setInterval((function(){var e=[];e[0]=0,e[1]=t.charAt(currentCharIndex),postMessage(e),currentCharIndex++}),n.typeDelay)}currentCharIndex=0,setTimeout(e,n.text[Math.floor(currentStringIndex/2)].length*n.typeDelay+n.typeDelay),currentStringIndex=(currentStringIndex+1)%(2*n.text.length)}onmessage=function(t){self.currentStringIndex=0,self.currentCharIndex=0,self.settings=t.data,self.sInt=null,self.eInt=null,self.once=!1,e()}}.toString(),")()"],{type:"application/javascript"}));worker=new Worker(r),URL.revokeObjectURL(r),worker.postMessage(n),worker.onmessage=function(t){var n,r,i=t.data;0===i[0]?(r=i[1],e("#typewriter-text").html(e("#typewriter-text").html()+r)):(n=e("#typewriter-text").html(),e("#typewriter-text").html(n.substring(0,n.length-1)))},e.isFunction(n.callback)&&n.callback.call(this)}))}}(jQuery);
+(function($) {
+    $.fn.typewriter = function(options) {
+        var settings = $.extend({
+            prefix: "Prefix",
+            text: ["Hey", "This is cool, isn't it?"],
+            typeDelay: 200,
+            waitingTime: 1000,
+            callback: null,
+            blinkSpeed: 1000
+        }, options);
+
+        return this.each(function() {
+            var that = this;
+            var domHtml = '';
+            var totalLength = 0;
+
+            for (var i = 0; i < settings.text.length; i++) {
+                totalLength += settings.text[i].length;
+            }
+
+            $(this).append('<span id="typewriter-prefix"></span>');
+            $(this).append('<span id="typewriter-text"></span>');
+            $(this).append('<span id="typewriter-suffix">&#9608;</span>');
+
+            $('#typewriter-prefix').html(settings.prefix);
+
+            function appendCharacter(character) {
+                $('#typewriter-text').html($('#typewriter-text').html() + character);
+            }
+
+            function removeCharacter() {
+                var str = $('#typewriter-text').html();
+                $('#typewriter-text').html(str.substring(0, str.length - 1));
+            }
+
+            setInterval(function() {
+                $('#typewriter-suffix').animate({
+                    opacity: 0
+                }).animate({
+                    opacity: 1
+                });
+            }, settings.blinkSpeed);
+
+            var blobURL = URL.createObjectURL(new Blob(['(',
+                function() {
+                    onmessage = function(e) {
+                        self.currentStringIndex = 0;
+                        self.currentCharIndex = 0;
+                        self.settings = e.data;
+                        self.sInt = null;
+                        self.eInt = null;
+                        self.once = false;
+                        start();
+                    };
+
+                    function start() {
+                        if (self.sInt !== null) {
+                            clearInterval(sInt);
+                            if (once === false) {
+                                setTimeout(start, settings.waitingTime);
+                                once = true;
+                                return;
+                            }
+                            once = false;
+                            sInt = null;
+                            eInt = setInterval(function() {
+                                var data = [];
+                                data[0] = 1;
+                                postMessage(data);
+                            }, settings.typeDelay);
+
+                        } else {
+                            clearInterval(eInt);
+                            eInt = null;
+                            var currentString = settings.text[Math.floor(currentStringIndex / 2)];
+                            sInt = setInterval(function() {
+                                var data = [];
+                                data[0] = 0;
+                                data[1] = currentString.charAt(currentCharIndex);
+                                postMessage(data);
+                                currentCharIndex++;
+                            }, settings.typeDelay);
+                        }
+
+                        currentCharIndex = 0;
+                        setTimeout(start, settings.text[Math.floor(currentStringIndex / 2)].length * settings.typeDelay + settings.typeDelay);
+                        currentStringIndex = (currentStringIndex + 1) % (settings.text.length * 2);
+                    }
+                }.toString(),
+                ')()'
+            ], {
+                type: 'application/javascript'
+            }));
+
+            worker = new Worker(blobURL);
+            URL.revokeObjectURL(blobURL);
+
+            worker.postMessage(settings);
+            worker.onmessage = function(e) {
+                var data = e.data;
+                if (data[0] === 0) {
+                    appendCharacter(data[1]);
+                } else {
+                    removeCharacter();
+                }
+            };
+            if ($.isFunction(settings.callback)) {
+                settings.callback.call(this);
+            }
+        });
+    };
+}(jQuery));
