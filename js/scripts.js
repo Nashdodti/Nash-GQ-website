@@ -19,7 +19,7 @@
 		// TYPEWRITER
 			$("#typewriter").typewriter({
 				prefix : "",
-				text : ["Keep Rolling", "Still loading", "Almost done"],
+				text : ["Keep Rolling", "Lets GO"],
 				typeDelay : 100,
 				waitingTime : 1500,
 				blinkSpeed : 800
